@@ -12,7 +12,31 @@ const port = 5500
 // middleware
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors())
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://foody-cart-6c36f.web.app',
+        'https://foody-cart-6c36f.firebaseapp.com'
+    ],
+    credentials: true,
+}))
+
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token
+
+    if (!token) {
+        return res.status(401).send({ messege: 'Unauthorized access' })
+    }
+
+    // verify token
+    jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ messege: "Unauthorized access" })
+        }
+        req.user = decoded
+        next()
+    })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lkytz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -26,20 +50,28 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
         const mainDB = client.db('FoodSharing')
 
         // auth related api .. jwt 
         app.post('/jwt', async (req, res) => {
             const user = req.body
             const token = jwt.sign(user, process.env.JWT_TOKEN, {
-                expiresIn: '3h'
+                expiresIn: '180h'
             });
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: false
+                secure: process.env.NODE_ENV === 'production'
             })
                 .send({ success: true })
+        })
+
+        app.post('/logout', (req, res) => {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production'
+            })
+                .send({ logOutSuccess: true })
         })
 
         // create a new collection in the existing database
@@ -50,8 +82,19 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/all-foods', async (req, res) => {
-            const cursor = database.find()
+        app.get('/all-foods', verifyToken, async (req, res) => {
+
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ messege: 'forbidden access' })
+            }
+
+
+            const email = req.query.email
+            let query = {}
+            if (email) {
+                query = { 'Donator.Email': email }
+            }
+            const cursor = database.find(query)
             const result = await cursor.toArray()
             res.send(result)
         })
@@ -108,9 +151,20 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/food-request', async (req, res) => {
-            const cursor = foodRequestDB.find()
+        app.get('/food-request', verifyToken, async (req, res) => {
+
+            if (req.user.email !== req.query.email) {
+                return res.status(403).send({ messege: 'forbidden access' })
+            }
+
+            const email = req.query.email
+            let query = {}
+            if (email) {
+                query = { RequestedUser: email }
+            }
+            const cursor = foodRequestDB.find(query)
             const results = await cursor.toArray()
+
             res.send(results)
         })
 
@@ -123,7 +177,7 @@ async function run() {
 
     } finally {
         // await client.close();
-        console.log('I am running.....');
+        console.log('MongoDB running.....');
     }
 }
 run().catch(error => console.log(error));
