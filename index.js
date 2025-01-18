@@ -25,13 +25,13 @@ const verifyToken = (req, res, next) => {
     const token = req.cookies?.token
 
     if (!token) {
-        return res.status(401).send({ messege: 'Unauthorized access' })
+        return res.status(401).send({ messege: 'unauthorized access' })
     }
 
     // verify token
     jwt.verify(token, process.env.JWT_TOKEN, (err, decoded) => {
         if (err) {
-            return res.status(401).send({ messege: "Unauthorized access" })
+            return res.status(401).send({ messege: "unauthorized access" })
         }
         req.user = decoded
         next()
@@ -57,19 +57,21 @@ async function run() {
         app.post('/jwt', async (req, res) => {
             const user = req.body
             const token = jwt.sign(user, process.env.JWT_TOKEN, {
-                expiresIn: '180h'
+                expiresIn: '18h'
             });
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production'
+                // secure: false
             })
-                .send({ success: true })
+                .send({ successs: true })
         })
 
         app.post('/logout', (req, res) => {
             res.clearCookie('token', {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production'
+                // secure: false
             })
                 .send({ logOutSuccess: true })
         })
@@ -82,18 +84,22 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/all-foods', verifyToken, async (req, res) => {
+        app.get('/all-foods', async (req, res) => {
+            const cursor = database.find()
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
+
+        // jwt token varified
+        app.get('/manage-all-foods', verifyToken, async (req, res) => {
             if (req.user.email !== req.query.email) {
-                return res.status(403).send({ messege: 'forbidden access' })
+                return res.status(403).send({ message: 'forbidden access' })
             }
-
 
             const email = req.query.email
-            let query = {}
-            if (email) {
-                query = { 'Donator.Email': email }
-            }
+            const query = { 'Donator.Email': email }
+
             const cursor = database.find(query)
             const result = await cursor.toArray()
             res.send(result)
@@ -151,6 +157,7 @@ async function run() {
             res.send(result)
         })
 
+        // jwt token varified
         app.get('/food-request', verifyToken, async (req, res) => {
 
             if (req.user.email !== req.query.email) {
@@ -158,10 +165,7 @@ async function run() {
             }
 
             const email = req.query.email
-            let query = {}
-            if (email) {
-                query = { RequestedUser: email }
-            }
+            const query = { RequestedUser: email }
             const cursor = foodRequestDB.find(query)
             const results = await cursor.toArray()
 
