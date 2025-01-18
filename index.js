@@ -15,6 +15,7 @@ app.use(cookieParser())
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        // 'https://back-end-part-a11.vercel.app',
         'https://foody-cart-6c36f.web.app',
         'https://foody-cart-6c36f.firebaseapp.com'
     ],
@@ -61,7 +62,8 @@ async function run() {
             });
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production'
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
                 // secure: false
             })
                 .send({ successs: true })
@@ -70,7 +72,8 @@ async function run() {
         app.post('/logout', (req, res) => {
             res.clearCookie('token', {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production'
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
                 // secure: false
             })
                 .send({ logOutSuccess: true })
