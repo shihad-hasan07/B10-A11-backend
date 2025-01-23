@@ -70,23 +70,23 @@ async function run() {
                 .send({ successs: true })
         })
 
-        // app.post('/logout', (req, res) => {
-        //     res.clearCookie('token', {
-        //         httpOnly: true,
-        //         secure: process.env.NODE_ENV === 'production',
-        //         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        //     })
-        //         .send({ logOutSuccess: true })
-        // })
-
-
-        app.post('/logout', async (req, res) => {
-            const user = req.body;
-            console.log('logging out', user);
-            res
-                .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
-                .send({ success: true })
+        app.post('/logout', (req, res) => {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            })
+                .send({ logOutSuccess: true })
         })
+
+
+        // app.post('/logout', async (req, res) => {
+        //     const user = req.body;
+        //     console.log('logging out', user);
+        //     res
+        //         .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
+        //         .send({ success: true })
+        // })
 
         // create a new collection in the existing database
         const database = mainDB.collection('AllFoods')
