@@ -14,6 +14,3 @@ The backend for the FoCo platform provides a secure server-side infrastructure t
 * **MongoDB**
 * **JWT**: For secure authentication.
 * **Cors**: To handle cross-origin requests.
-
-## Environment Variables
-Create a `.env` file with the following variables:
