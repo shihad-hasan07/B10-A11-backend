@@ -15,7 +15,6 @@ app.use(cookieParser())
 app.use(cors({
     origin: [
         'http://localhost:5173',
-        // 'https://back-end-part-a11.vercel.app',
         'https://foody-cart-6c36f.web.app',
         'https://foody-cart-6c36f.firebaseapp.com'
     ],
@@ -24,6 +23,8 @@ app.use(cors({
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies?.token
+
+    console.log('token is', token);
 
     if (!token) {
         return res.status(401).send({ messege: 'unauthorized access' })
@@ -69,14 +70,22 @@ async function run() {
                 .send({ successs: true })
         })
 
-        app.post('/logout', (req, res) => {
-            res.clearCookie('token', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-                // secure: false
-            })
-                .send({ logOutSuccess: true })
+        // app.post('/logout', (req, res) => {
+        //     res.clearCookie('token', {
+        //         httpOnly: true,
+        //         secure: process.env.NODE_ENV === 'production',
+        //         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        //     })
+        //         .send({ logOutSuccess: true })
+        // })
+
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('logging out', user);
+            res
+                .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
+                .send({ success: true })
         })
 
         // create a new collection in the existing database
