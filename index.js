@@ -56,7 +56,7 @@ async function run() {
         const mainDB = client.db('FoodSharing')
 
         // auth related api .. jwt 
-        app.post('/jwt', async (req, res) => {
+        app.post('/jwt', async ( req, res) => {
             const user = req.body
             const token = jwt.sign(user, process.env.JWT_TOKEN, {
                 expiresIn: '18h'
